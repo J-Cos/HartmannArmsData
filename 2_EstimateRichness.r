@@ -1,7 +1,7 @@
 #packages
     library(tidyverse)
     library(phyloseq)
-    library(BioinformaticsPackage)
+    library(BioinformaticsPackage) # see this here (not yet on CRAN): https://github.com/J-Cos/BioinformaticsPackage
 
 #functions
     GetAaronsRichnessDataframe<-function(psList=ps_l, Depth=Depths, Gene, NumberOfReplicates){
@@ -38,7 +38,7 @@
 # define parameters
     Depths<-list(   "COI"=39397,
                     "16s"=55296) #one fewer than minimum depth on each
-    Replicates<-10
+    Replicates<-1000
 
 #2) multirarefy
     #get sample depths
@@ -55,5 +55,5 @@
         mutate(NumberRarefyReplicates=Replicates)
 
     write.csv(RichnessStats, file.path("Outputs", "RichnessStats.csv"))
-    write.csv(RichnessCoiDf_list[["Replicates"]], file.path("Outputs", "COIReplicates.csv"))
-    write.csv(Richness16sDf_list[["Replicates"]], file.path("Outputs", "16sReplicates.csv"))
+    write.csv(RichnessCoiDf_list[["Replicates"]], file.path("Outputs", "COIRarefyReplicates.csv"))
+    write.csv(Richness16sDf_list[["Replicates"]], file.path("Outputs", "16sRarefyReplicates.csv"))
