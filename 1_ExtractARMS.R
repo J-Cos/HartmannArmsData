@@ -40,10 +40,9 @@ PruneToMatchingArms<-function(psToPrune, psToMatch) {
         ps16Aaron<-PrunePhyloseqToAaronsData(phyloseqRDS=file.path("/home/j/Dropbox/CrossPacific_Paper", "Outputs", "ps16.RDS"))
         psCoiAaron<-PrunePhyloseqToAaronsData(phyloseqRDS=file.path("/home/j/Dropbox/CrossPacific_Paper", "Outputs", "psCOI.RDS"))
 
-#3) Prune to matched ARMS only
-        pruned16s<-PruneToMatchingArms(psToPrune=ps16Aaron, psToMatch=psCoiAaron)
-        prunedCoi<-PruneToMatchingArms(psToPrune=psCoiAaron, psToMatch=ps16Aaron)
-
+#3) Prune to matched ARMS only - Aaron's analysis can use all samples so don't do this
+        #ps16Aaron<-PruneToMatchingArms(psToPrune=ps16Aaron, psToMatch=psCoiAaron)
+        #psCoiAaron<-PruneToMatchingArms(psToPrune=psCoiAaron, psToMatch=ps16Aaron)
 
 #4) save output
-        saveRDS(list("16s"=pruned16s, "COI"=prunedCoi), file.path("Outputs", "AaronsARMS.RDS"))
+        saveRDS(list("16s"=ps16Aaron, "COI"=psCoiAaron), file.path("Outputs", "AaronsARMS.RDS"))

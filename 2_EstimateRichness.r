@@ -51,7 +51,7 @@
         Richness16sDf_list<-GetAaronsRichnessDataframe(Gene="16s", NumberOfReplicates=Replicates)
 
 #3) reformat and output to csv
-    RichnessStats<-left_join(RichnessCoiDf_list[["Stats"]],Richness16sDf_list[["Stats"]], by="ARMS", suffix=c("_COI", "_16s")) %>%
+    RichnessStats<-full_join(RichnessCoiDf_list[["Stats"]],Richness16sDf_list[["Stats"]], by="ARMS", suffix=c("_COI", "_16s")) %>%
         mutate(NumberRarefyReplicates=Replicates)
 
     write.csv(RichnessStats, file.path("Outputs", "RichnessStats.csv"))
