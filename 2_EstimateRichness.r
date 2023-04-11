@@ -1,3 +1,7 @@
+# 2_EstimateRichness
+# This script applies a multiple rarefying approach to estimate the ESV richness on each ARMS unit. Outputs 
+# both means, sd, se. and all replicate richness valeus as seperate csvs. 
+
 #packages
     library(tidyverse)
     library(phyloseq)
@@ -38,7 +42,7 @@
 # define parameters
     Depths<-list(   "COI"=39397,
                     "16s"=55296) #one fewer than minimum depth on each
-    Replicates<-1000
+    Replicates<-100
 
 #2) multirarefy
     #get sample depths

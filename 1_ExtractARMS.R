@@ -1,35 +1,39 @@
+# 1_ExtractARMS 
+# This script extracts Hartmann's Sessile ARMS fractions from the complete phyloseq objects 
+
+
 #packages
     library(tidyverse)
     library(phyloseq)
 
 #functions
-GetSmallerDuplicateSampleNames<-function(ps){   
-    duplicateARMS<-sample_data(ps)$ARMS[sample_data(ps)$ARMS%>% duplicated]
-    smallerDuplicates<-c()
-    for (ARMS in duplicateARMS){
-        duplicateSamples<-sample_names(ps)[sample_data(ps)$ARMS ==ARMS]
-        largestDuplicate<-which.max(sample_sums(ps)[duplicateSamples])
-        smallerDuplicates<-c(smallerDuplicates, duplicateSamples[-largestDuplicate])
+    GetSmallerDuplicateSampleNames<-function(ps){   
+        duplicateARMS<-sample_data(ps)$ARMS[sample_data(ps)$ARMS%>% duplicated]
+        smallerDuplicates<-c()
+        for (ARMS in duplicateARMS){
+            duplicateSamples<-sample_names(ps)[sample_data(ps)$ARMS ==ARMS]
+            largestDuplicate<-which.max(sample_sums(ps)[duplicateSamples])
+            smallerDuplicates<-c(smallerDuplicates, duplicateSamples[-largestDuplicate])
+        }
+        return(smallerDuplicates)
     }
-    return(smallerDuplicates)
-}
 
-PrunePhyloseqToAaronsData<-function(phyloseqRDS){
-    ps<-readRDS(file=phyloseqRDS) %>% 
-            prune_samples(sample_data(.)$Fraction=="BS" | sample_data(.)$Fraction=="Sessile",.) %>% # "BS" in 16s and "Sessile" in COI - Aarons data is all sessile
-            prune_samples(sample_data(.)$ARMS %in% HartmannARMS,.) %>%
-            prune_samples(!sample_names(.) %in% GetSmallerDuplicateSampleNames(.),.) %>%
+    PrunePhyloseqToAaronsData<-function(phyloseqRDS){
+        ps<-readRDS(file=phyloseqRDS) %>% 
+                prune_samples(sample_data(.)$Fraction=="BS" | sample_data(.)$Fraction=="Sessile",.) %>% # "BS" in 16s and "Sessile" in COI - Aarons data is all sessile
+                prune_samples(sample_data(.)$ARMS %in% HartmannARMS,.) %>%
+                prune_samples(!sample_names(.) %in% GetSmallerDuplicateSampleNames(.),.) %>%
+                prune_taxa(taxa_sums(.)>0, .)
+        return(ps)
+    }
+
+    PruneToMatchingArms<-function(psToPrune, psToMatch) {
+        MatchedARMS_indices<-sample_data(psToPrune)$ARMS %in% sample_data(psToMatch)$ARMS
+        ps_pruned<-psToPrune %>%  
+            prune_samples(MatchedARMS_indices, .) %>%
             prune_taxa(taxa_sums(.)>0, .)
-    return(ps)
-}
-
-PruneToMatchingArms<-function(psToPrune, psToMatch) {
-    MatchedARMS_indices<-sample_data(psToPrune)$ARMS %in% sample_data(psToMatch)$ARMS
-    ps_pruned<-psToPrune %>%  
-        prune_samples(MatchedARMS_indices, .) %>%
-        prune_taxa(taxa_sums(.)>0, .)
-    return(ps_pruned)
-}
+        return(ps_pruned)
+    }
 
 
 #1) load data
