@@ -9,18 +9,18 @@
   library(brms)
 
 #functions
-MakePredictionPlot<-function(data, model, outcome, predictorGene, gridAndDraws=100){
+MakePredictionPlot<-function(data, model, outcome, predictorGene, endemicLabelling="", gridAndDraws=100){
 
     sd<-paste0("SD_",predictorGene)
     mean<-paste0("mean_", predictorGene)
     if(predictorGene=="16s"){
-        xlabel<-paste0(predictorGene, "rRNA gene richness")
+        xlabel<-paste0(predictorGene, " rRNA gene ",endemicLabelling, "richness")
     } else if (predictorGene=="COI"){
-        xlabel<-paste0(predictorGene, " gene richness")
+        xlabel<-paste0(predictorGene, " gene ",endemicLabelling, "richness")
     }
 
     dataGrid<- data %>%
-        modelr::data_grid(mean = modelr::seq_range(!! sym(mean), n=gridAndDraws), SD = modelr::seq_range(!! sym(sd), n=gridAndDraws), Ecoregion) 
+        modelr::data_grid(mean = modelr::seq_range(!! rlang::sym(mean), n=gridAndDraws), SD = modelr::seq_range(!! rlang::sym(sd), n=gridAndDraws), Ecoregion) 
 
     names(dataGrid)<-c(mean, sd, "Ecoregion")
 
@@ -34,7 +34,7 @@ MakePredictionPlot<-function(data, model, outcome, predictorGene, gridAndDraws=1
         scale_x_continuous(expand = c(0, 0)) +
         scale_y_continuous(expand = c(0, 0)) +
         xlab(xlabel) +
-        ylab(str_replace(outcome, "_", " "))+
+        ylab(str_replace_all(outcome, "_", " "))+
         customAes[["col"]]+customAes[["fill"]]+customAes[["shape"]]+
         theme(
             panel.border = element_blank(), 
@@ -57,7 +57,8 @@ MakeEcoregionCredibleIntervalPlot<-function(model, outcomeLabel, predictorLabel)
                         labels = c("Aceh", "Bali", "Line Island", "Seribu Island", "Samoa", "Verde Island")) +
         theme(legend.position = "none") +
         ggtitle(paste0(outcomeLabel, " ~ ", predictorLabel)) +
-        theme(axis.title = element_text(size = 12))
+        theme(  plot.title = element_text( size=10),,
+                axis.title = element_text(size = 8))
 }
 #set parameters
     customAes<-list(
@@ -72,10 +73,17 @@ MakeEcoregionCredibleIntervalPlot<-function(model, outcomeLabel, predictorLabel)
 
 # 1) load data
     df<-readRDS(file.path("Outputs", "BayesianModelInputData.RDS"))
+    df_endemics<-readRDS(file.path("Outputs", "endemics_BayesianModelInputData.RDS"))
+    df_endemics_v_endemics<-readRDS(file.path("Outputs", "endemics_v_endemics_BayesianModelInputData.RDS"))
     M1<-readRDS(file.path("Outputs", "M1_Output.RDS"))
     M2<-readRDS(file.path("Outputs", "M2_Output.RDS"))
     M3<-readRDS(file.path("Outputs", "M3_Output.RDS"))
     M4<-readRDS(file.path("Outputs", "M4_Output.RDS"))
+    M5<-readRDS(file.path("Outputs", "M5_Output.RDS"))
+    M6<-readRDS(file.path("Outputs", "M6_Output.RDS"))
+    M7<-readRDS(file.path("Outputs", "M7_Output.RDS"))
+    M8<-readRDS(file.path("Outputs", "M8_Output.RDS"))
+
 
 # 2) plot posterior prediction curves
     MakePredictionPlot(data=df, model=M1, outcome="Metabolite_richness", predictorGene="16s")
@@ -90,6 +98,17 @@ MakeEcoregionCredibleIntervalPlot<-function(model, outcomeLabel, predictorLabel)
     MakePredictionPlot(data=df, model=M4, outcome="Metabolite_diversity", predictorGene="COI")
     ggsave(filename="Figures/M4_plot.png", width = 6, height = 6)
 
+    MakePredictionPlot(data=df_endemics, model=M5, outcome="Metabolite_endemic_richness", predictorGene="16s")
+    ggsave(filename="Figures/M5_plot.png", width = 6, height = 6)
+
+    MakePredictionPlot(data=df_endemics, model=M6, outcome="Metabolite_endemic_richness", predictorGene="COI")
+    ggsave(filename="Figures/M6_plot.png", width = 6, height = 6)
+
+    MakePredictionPlot(data=df_endemics_v_endemics, model=M7, outcome="Metabolite_endemic_richness", endemicLabelling="endemic ", predictorGene="16s")
+    ggsave(filename="Figures/M7_plot.png", width = 6, height = 6)
+
+    MakePredictionPlot(data=df_endemics_v_endemics, model=M8, outcome="Metabolite_endemic_richness", endemicLabelling="endemic ", predictorGene="COI")
+    ggsave(filename="Figures/M8_plot.png", width = 6, height = 6)
 
 # 3) plot credible intervals per ecoregion
     MakeEcoregionCredibleIntervalPlot(M1, "Metabolite richness", "16s rRNA gene richness")
@@ -103,3 +122,15 @@ MakeEcoregionCredibleIntervalPlot<-function(model, outcomeLabel, predictorLabel)
 
     MakeEcoregionCredibleIntervalPlot(M4, "Metabolite diversity", "COI gene richness")
     ggsave(filename="Figures/M4_CredibleIntervalPlot.png", width = 6, height = 6)
+    
+    MakeEcoregionCredibleIntervalPlot(M5, "Metabolite endemic richness", "COI gene richness")
+    ggsave(filename="Figures/M5_CredibleIntervalPlot.png", width = 6, height = 6)
+
+    MakeEcoregionCredibleIntervalPlot(M6, "Metabolite endemic richness", "COI gene richness")
+    ggsave(filename="Figures/M6_CredibleIntervalPlot.png", width = 6, height = 6)
+
+    MakeEcoregionCredibleIntervalPlot(M7, "Metabolite endemic richness", "16s rRNA gene endemic richness")
+    ggsave(filename="Figures/M7_CredibleIntervalPlot.png", width = 6, height = 6)
+
+    MakeEcoregionCredibleIntervalPlot(M8, "Metabolite endemic richness", "COI gene endemic richness")
+    ggsave(filename="Figures/M8_CredibleIntervalPlot.png", width = 6, height = 6)
