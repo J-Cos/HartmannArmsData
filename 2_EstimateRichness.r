@@ -65,7 +65,7 @@ GetEndemicsDataframe<-function(psList){
 
         for (sample in sample_names(ps)) {
             
-            ESVsPresentInSample<- taxa_names(ps)    [(otu_table(ps)[,sample]>1)]
+            ESVsPresentInSample<- taxa_names(ps)    [(otu_table(ps)[,sample]>0)]
             
              df_list[[i]][sample,"NumberEndemics"]<-ps %>%
                 prune_taxa(ESVsPresentInSample, .) %>%
@@ -109,7 +109,7 @@ GetEndemicsDataframe<-function(psList){
     write.csv(RichnessCoiDf_list[["Replicates"]], file.path("Outputs", "COIRarefyReplicates.csv"))
     write.csv(Richness16sDf_list[["Replicates"]], file.path("Outputs", "16sRarefyReplicates.csv"))
 
-# 4) get endemics ad output to csv
+# 4) get endemics and output to csv
     psCOI_rarefiedReplicate_l<-GetRarefiedReplicatePsList(psList=ps_l, Depth=Depths, Gene="COI", NumberOfReplicates=Replicates)
     EndemicCOIDf<-GetEndemicsDataframe(psCOI_rarefiedReplicate_l)
     ps16_rarefiedReplicate_l<-GetRarefiedReplicatePsList(psList=ps_l, Depth=Depths, Gene="16s", NumberOfReplicates=Replicates)
