@@ -44,6 +44,17 @@ FitLinearModel<- function( data, outcome, predictor, EcoregionRandomIntercept=FA
   return(list("qqplot"=qqplot, "lmplot"=lmplot))
 }
 
+PlotVIF<-function(dat, outcome="Metabolite_richness"){
+    ## variance inflation factor
+    model_formula <- formula(paste0(outcome, " ~ ."))
+
+    model_all <- lm(model_formula, data=dat)  # with all the independent variables in the dataframe
+    summary(model_all)
+    vif_values <-car::vif(model_all)
+    barplot(vif_values, main = "VIF Values", horiz = TRUE, col = "steelblue") #create horizontal bar chart to display each VIF value
+    abline(v = 5, lwd = 3, lty = 2)    #add vertical line at 5 as after 5 there is severe correlation
+}
+
 FitBayesianLinearModel<-function( data, outcome, predictor, measurementError=FALSE, ModelName="NoName", test=FALSE) {
 
     #define inputs

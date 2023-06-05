@@ -49,32 +49,107 @@
   dev.off()
 
 
-#4) stress-metab: frequentist linear model (exploratory only)
+#4) stress-metab: frequentist linear model
 
-    lm(Metabolite_richness~nceas_score, df) %>% summary
-    #tangetial check of microbe macrobe patterns
-        lm(mean_16s~nceas_score, df) %>% summary
-        lm(mean_COI~nceas_score, df) %>% summary
-        lm(mean_16s~mean_COI, df) %>% summary
+  #COI only
+    dat<-df %>%
+      select(mean_COI, Metabolite_richness, nceas_score) %>%
+      filter(complete.cases(.))
 
-        lmerTest::lmer(mean_16s~nceas_score+(1|Ecoregion), df) %>% summary
-        lmerTest::lmer(mean_COI~nceas_score+(1|Ecoregion), df) %>% summary
-        lmerTest::lmer(mean_16s~mean_COI+(1|Ecoregion), df) %>% summary
+    dat %>% PlotVIF
+
+    MuMIn::dredge(lm(Metabolite_richness ~ ., data = dat, na.action = "na.fail"))
+
+    # mixed model
+    dat<-df %>%
+      select(mean_COI, Metabolite_richness, nceas_score, Ecoregion) %>%
+      filter(complete.cases(.)) #%>%
+      #mutate_at(c("mean_COI", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
+
+    fm1<-lmerTest::lmer(Metabolite_richness~ nceas_score + (1|Ecoregion), data = dat)
+    fm2<-lmerTest::lmer(Metabolite_richness~ mean_COI + (1|Ecoregion), data = dat)
+    fm3<-lmerTest::lmer(Metabolite_richness~ nceas_score + mean_COI + (1|Ecoregion), data = dat)
+    fm4<-lmerTest::lmer(Metabolite_richness~ (1|Ecoregion), data = dat)
+
+    MuMIn::model.sel(list(fm1, fm2, fm3, fm4), rank="AICc") %>% 
+      as.data.frame %>%
+      write.csv("Outputs/FrequentistModelSelection_COI.csv")
+
+    car::qqPlot(residuals(fm1))
 
 
-    #random intercepts model
-        OutputSubdirectory<-file.path("Outputs", "FrequentistMixedModel")
+  #16s only 
+    dat<-df %>%
+      select(mean_16s, Metabolite_richness, nceas_score) %>%
+      filter(complete.cases(.))
+  
+    dat %>% PlotVIF
+
+    MuMIn::dredge(lm(Metabolite_richness ~ ., data = dat, na.action = "na.fail"))
+
+    # mixed model
+    dat<-df %>%
+      select(mean_16s, Metabolite_richness, nceas_score, Ecoregion) %>%
+      filter(complete.cases(.)) #%>%
+      #mutate_at(c("mean_16s", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
+
+    fm1<-lmerTest::lmer(Metabolite_richness~ nceas_score + (1|Ecoregion), data = dat)
+    fm2<-lmerTest::lmer(Metabolite_richness~ mean_16s + (1|Ecoregion), data = dat)
+    fm3<-lmerTest::lmer(Metabolite_richness~ nceas_score + mean_16s + (1|Ecoregion), data = dat)
+    fm4<-lmerTest::lmer(Metabolite_richness~ (1|Ecoregion), data = dat)
+
+    MuMIn::model.sel(list(fm1, fm2, fm3, fm4)) %>% 
+      as.data.frame %>%
+      write.csv("Outputs/FrequentistModelSelection_16s.csv")
+    car::qqPlot(residuals(fm1))
+
+
+
+
+  #both genes
+    dat<-df %>%
+      select(mean_COI, mean_16s, Metabolite_richness, nceas_score) %>%
+      filter(complete.cases(.))
+    
+    dat %>% PlotVIF
+
+    MuMIn::dredge(lm(Metabolite_richness ~ ., data = dat, na.action = "na.fail"))
+
+    # mixed model
+    dat<-df %>%
+      select(mean_COI, mean_16s, Metabolite_richness, nceas_score, Ecoregion) %>%
+      filter(complete.cases(.))  #%>%
+      #mutate_at(c("mean_16s", "mean_COI", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
+
+      fm1<-lmerTest::lmer(Metabolite_richness~ nceas_score + (1|Ecoregion), data = dat)
+      fm2<-lmerTest::lmer(Metabolite_richness~ mean_16s + (1|Ecoregion), data = dat)
+      fm3<-lmerTest::lmer(Metabolite_richness~ mean_COI + (1|Ecoregion), data = dat)
+      fm4<-lmerTest::lmer(Metabolite_richness~ nceas_score + mean_16s + (1|Ecoregion), data = dat)
+      fm5<-lmerTest::lmer(Metabolite_richness~ nceas_score + mean_COI + (1|Ecoregion), data = dat)
+      fm6<-lmerTest::lmer(Metabolite_richness~ mean_COI + mean_16s + (1|Ecoregion), data = dat)
+      fm7<-lmerTest::lmer(Metabolite_richness~ nceas_score + mean_COI + mean_16s + (1|Ecoregion), data = dat)
+      fm8<-lmerTest::lmer(Metabolite_richness~ (1|Ecoregion), data = dat)
+
+      MuMIn::model.sel(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) %>% 
+      as.data.frame %>%
+      write.csv("Outputs/FrequentistModelSelection_BothGenes.csv")
+      car::qqPlot(residuals(fm1))
+
+
+
+  #fit best model to all data
+        OutputSubdirectory<-file.path("Outputs", "FrequentistMixedModel_Best")
         dir.create(OutputSubdirectory)
 
         mod<-lmerTest::lmer(Metabolite_richness~nceas_score+(1|Ecoregion), df)
-        png(file.path(OutputSubdirectory, "FrequentistMixedModel_qqplot.png"), height = 8.3, width = 11.7, units = 'in', res = 300)
+        png(file.path(OutputSubdirectory, "FrequentistMixedModel_Best_qqplot.png"), height = 8.3, width = 11.7, units = 'in', res = 300)
             car::qqPlot(residuals(mod))
         dev.off()
 
         sjPlot::tab_model(mod,
                     pred.labels = c("Intercept", "nceas_score"),
-                    dv.labels = c("FrquentistMixedModel_Stress-Metab"),
-                    file=(file.path(OutputSubdirectory, "FrequentistMixedModel_Stress-Metab.html"))
+                    dv.labels = c("FrquentistMixedModel_Best"),
+                    file=(file.path(OutputSubdirectory, "FrequentistMixedModel_Best.html"))
         )
 
     #plot with random intercepts 
@@ -94,10 +169,10 @@
                 annotate("text", label = paste0("R2c = ", signif( MuMIn::r.squaredGLMM(mod)[2], 2)), y = textPositions2[1], x=textPositions2[2], size = 6, color = "black",  hjust = "inward")+
                 annotate("text", label = paste0("p = ", signif(summary(mod)$coefficients[2,5], 2)), y = textPositions3[1], x=textPositions3[2], size = 6, color = "black",  hjust = "inward")
 
-        ggsave("Figures/StressLinearModel.png", width = 8, height = 7)
+        ggsave("Figures/BestFrequentistModel.png", width = 8, height = 7)
 
 
-    #bayesian plot exploration
+  #bayesian version of the best model
         StressBayesianModel <- brms::brm(Metabolite_richness~nceas_score+(1|Ecoregion),
                     data = df,
                     warmup = 1000, iter = 10000,
