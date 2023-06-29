@@ -31,14 +31,13 @@
         left_join(read.csv(file.path("Data", "nceas_scores.csv"))) %>%
         as_tibble
 
-    metabEndemics<-read.csv(file.path("Data", "Hartmann_metabolite_endemics.csv")) %>%
+    metabEndemics<-read.csv(file.path("Data", "Hartmann_new_endemics_3persite.csv")) %>%
         select(ARMS, site.endemic)
-
     df<-left_join(df, metabEndemics, by=c("Metab_Sample"= "ARMS"))
 
 #2) Correlation matrices
   df %>% 
-    select(mean_COI, mean_16s, site.endemic, nceas_score)%>%
+    select(mean_COI, mean_16s, site.endemic, nceas_score)%>% 
     GGally::ggpairs()
 
   ggsave("Figures/SiteEndemics_v_SiteEndemics_correlations.png", width = 8, height = 7)
@@ -56,6 +55,9 @@
 
 #4) stress-metab: frequentist linear model
 
+  OutputSubdirectory<-file.path("Outputs", "MetaboliteSiteEndemicRichness")
+  dir.create(OutputSubdirectory)
+
   #both genes
     dat<-df %>%
       select(mean_COI, mean_16s, site.endemic, nceas_score) %>%
@@ -68,7 +70,9 @@
     # mixed model
     dat<-df %>%
       select(mean_COI, mean_16s, site.endemic, nceas_score, Ecoregion) %>%
-      filter(complete.cases(.))  #%>%
+      filter(complete.cases(.))  %>%
+      mutate(mean_COI=log(mean_COI),
+              mean_16s=log(mean_16s))#%>%
       #mutate_at(c("mean_16s", "mean_COI", "site.endemic", "nceas_score"), ~(scale(.) %>% as.vector))
 
       fm1<-glmer.nb(site.endemic~ nceas_score + (1|Ecoregion), data = dat)
@@ -82,12 +86,12 @@
 
       MuMIn::model.sel(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) %>% 
       as.data.frame %>%
-      write.csv("Outputs/FrequentistModelSelection_SiteEndemics_BothGenes.csv")
+      write.csv(file.path(OutputSubdirectory,"FrequentistModelSelection_SiteEndemics_BothGenes.csv"))
       car::qqPlot(residuals(fm1))
 
   #COI only
     dat<-df %>%
-      select(mean_COI, site.endemic, nceas_score) %>%
+      select( mean_COI, site.endemic, nceas_score) %>% 
       filter(complete.cases(.))
 
     dat %>% PlotVIF(outcome="site.endemic")
@@ -97,7 +101,8 @@
     # mixed model
     dat<-df %>%
       select(mean_COI, site.endemic , nceas_score, Ecoregion) %>%
-      filter(complete.cases(.)) #%>%
+      filter(complete.cases(.))  %>%
+      mutate(mean_COI=log(mean_COI))#%>% #%>%
       #mutate(site.endemic=log(site.endemic+0.00000001))
       #mutate_at(c("mean_COI", "site.endemic", "nceas_score"), ~(scale(.) %>% as.vector))
 
@@ -108,7 +113,7 @@
 
     MuMIn::model.sel(list(fm1, fm2, fm3, fm4), rank="AICc") %>% 
       as.data.frame %>%
-      write.csv("Outputs/FrequentistModelSelection_SiteEndemics_COI.csv")
+      write.csv(file.path(OutputSubdirectory,"FrequentistModelSelection_SiteEndemics_COI.csv"))
 
     car::qqPlot(residuals(fm1))
 
@@ -125,7 +130,8 @@
     # mixed model
     dat<-df %>%
       select(mean_16s, site.endemic, nceas_score, Ecoregion) %>%
-      filter(complete.cases(.)) #%>%
+      filter(complete.cases(.))%>%
+      mutate(mean_16s=log(mean_16s))# #%>%
       #mutate_at(c("mean_16s", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
 
     fm1<-glmer.nb(site.endemic~ nceas_score + (1|Ecoregion), data = dat)
@@ -135,17 +141,18 @@
 
     MuMIn::model.sel(list(fm1, fm2, fm3, fm4)) %>% 
       as.data.frame %>%
-      write.csv("Outputs/FrequentistModelSelection_SiteEndemics_16s.csv")
-    car::qqPlot(residuals(fm2))
+      write.csv(file.path(OutputSubdirectory,"FrequentistModelSelection_SiteEndemics_16s.csv"))
+    car::qqPlot(residuals(fm1))
 
 
   #fit best model to all data
-    mod<-fm2
+    mod<- glmer.nb(site.endemic~ nceas_score + (1|Ecoregion), data = df)
+
       summary(mod)
 
-        OutputSubdirectory<-file.path("Outputs", "FrequentistMixedModel_SiteEndemics")
-        dir.create(OutputSubdirectory)
-
+        png(file.path(OutputSubdirectory, "FrequentistMixedModel_SiteEndemics_Best_qqplot.png"), height = 8.3, width = 11.7, units = 'in', res = 300)
+            car::qqPlot(residuals(mod))
+        dev.off()
 
         sjPlot::tab_model(mod,
                     dv.labels = c("AveragedBestModel_SiteEndemics"),
@@ -154,14 +161,14 @@
 
     #plot with random intercepts 
 
-        textPositions1<-c(max(dat[,"site.endemic"], na.rm=T), min(dat[,"nceas_score"], na.rm=T))
-        textPositions2<-textPositions1-c(diff(range(dat[,"site.endemic"], na.rm=T))*0.1, 0)
-        textPositions3<-textPositions1-c(diff(range(dat[,"site.endemic"], na.rm=T))*0.2, 0)
+        textPositions1<-c(max(df[,"site.endemic"], na.rm=T), min(df[,"nceas_score"], na.rm=T))
+        textPositions2<-textPositions1-c(diff(range(df[,"site.endemic"], na.rm=T))*0.1, 0)
+        textPositions3<-textPositions1-c(diff(range(df[,"site.endemic"], na.rm=T))*0.2, 0)
 
-        dat %>%
+        df %>%
             filter(!is.na(site.endemic))%>%
             cbind("prediction"=predict(mod, type="response"))%>%
-            ggplot(aes(y=site.endemic, x=mean_16s))+
+            ggplot(aes(y=site.endemic, x=nceas_score))+
                 #geom_smooth(method=lm, color="black")+
                 geom_point(aes(color=Ecoregion))+
                 geom_line(aes(y=prediction, color=Ecoregion))+
@@ -169,9 +176,21 @@
                 annotate("text", label = paste0("R2c = ", signif( MuMIn::r.squaredGLMM(mod)[1,2], 2)), y = textPositions2[1], x=textPositions2[2], size = 6, color = "black",  hjust = "inward")+
                 annotate("text", label = paste0("p = ", signif(summary(mod)$coefficients[2,4], 2)), y = textPositions3[1], x=textPositions3[2], size = 6, color = "black",  hjust = "inward")
 
-        ggsave("Figures/BestFrequentistModel_SiteEndemics.png", width = 8, height = 7)
+        ggsave(file.path(OutputSubdirectory,"BestFrequentistModel_SiteEndemics.png"), width = 8, height = 7)
 
-  #bayesian version of the best model
+
+
+
+
+
+
+
+
+
+
+
+
+#bayesian version of the best model
         StressBayesianModel <- brms::brm(site.endemic ~mean_16s+(1|Ecoregion),
                     data = df,
                     warmup = 1000, iter = 10000,
