@@ -180,7 +180,27 @@
                     "16s"=55296) #one fewer than minimum depth on each
     Replicates<-100
 
-#2) multirarefy
+#2) save community matrices
+    psc<-prune_samples(sample_data(ps_l[["COI"]])$ARMS %in% sample_data(ps_l[["16s"]])$ARMS, ps_l[["COI"]])
+    ps16<-prune_samples(sample_data(ps_l[["16s"]])$ARMS %in% sample_data(ps_l[["COI"]])$ARMS, ps_l[["16s"]])
+
+    sample_sums(psc) %>% sort
+    sample_sums(ps16) %>% sort
+    
+    pscr<-rarefy_even_depth(psc)
+    ps16r<-rarefy_even_depth(ps16)
+
+    GetCommMatNamedByARMS<-function(ps) {
+        cm<-otu_table(ps) 
+        colnames(cm)<-    as.vector(sample_data(ps)[,"ARMS"])$ARMS
+        return(cm)
+    }
+
+    write.csv(GetCommMatNamedByARMS(pscr), "Outputs/CommunityMatrix_COI.csv")
+    write.csv(GetCommMatNamedByARMS(ps16r), "Outputs/CommunityMatrix_16s.csv")
+
+#3) multirarefy
+
     #get sample depths
         MatchedCOIARMS_indices<-sample_data(ps_l[["COI"]])$ARMS %in% sample_data(ps_l[["16s"]])$ARMS
         NumberMatchedARMS<-sum(MatchedCOIARMS_indices)
@@ -190,7 +210,7 @@
         RichnessCoiDf_list<-GetAaronsRichnessDataframe(Gene="COI", NumberOfReplicates=Replicates)
         Richness16sDf_list<-GetAaronsRichnessDataframe(Gene="16s", NumberOfReplicates=Replicates)
 
-#3) reformat and output to csv
+#4) reformat and output to csv
     RichnessStats<-full_join(RichnessCoiDf_list[["Stats"]],Richness16sDf_list[["Stats"]], by="ARMS", suffix=c("_COI", "_16s")) %>%
         mutate(NumberRarefyReplicates=Replicates)
 
@@ -198,7 +218,7 @@
     write.csv(RichnessCoiDf_list[["Replicates"]], file.path("Outputs", "COIRarefyReplicates.csv"))
     write.csv(Richness16sDf_list[["Replicates"]], file.path("Outputs", "16sRarefyReplicates.csv"))
 
-# 4) get endemics and output to csv
+# 5) get endemics and output to csv
     #prune to endemics
         DesiredArmsForEndemicsAnalysis<-c(
             "ARSG1A", "ARSG1B", "ARSG1C", 
