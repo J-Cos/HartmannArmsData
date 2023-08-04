@@ -139,6 +139,8 @@
         write.csv(file.path(OutputSubdirectory, "FrequentistModelSelection_BothGenes.csv"))
         car::qqPlot(residuals(fm1))
 
+        MakeModelSelectionTableForPrinting(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) %>%
+          write.csv(file.path(OutputSubdirectory, "ModelSelectionTable_MetaboliteRichness.csv"))
 
 
     #fit best model to all data
@@ -261,6 +263,8 @@
         write.csv(file.path(OutputSubdirectory,"FrequentistModelSelection_Diversity_BothGenes.csv"))
         car::qqPlot(residuals(fm1))
 
+        MakeModelSelectionTableForPrinting(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) %>%
+          write.csv(file.path(OutputSubdirectory, "ModelSelectionTable_MetaboliteDiversity.csv"))
 
 
     #fit best model to all data

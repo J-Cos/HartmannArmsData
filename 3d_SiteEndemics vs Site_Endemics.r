@@ -88,6 +88,8 @@
       as.data.frame %>%
       write.csv(file.path(OutputSubdirectory,"FrequentistModelSelection_SiteEndemics_BothGenes.csv"))
       car::qqPlot(residuals(fm1))
+        MakeModelSelectionTableForPrinting(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) %>%
+          write.csv(file.path(OutputSubdirectory, "ModelSelectionTable_SiteEndemics.csv"))
 
   #COI only
     dat<-df %>%
