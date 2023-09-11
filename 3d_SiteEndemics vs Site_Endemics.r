@@ -90,7 +90,27 @@
       car::qqPlot(residuals(fm1))
         MakeModelSelectionTableForPrinting(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) %>%
           write.csv(file.path(OutputSubdirectory, "ModelSelectionTable_SiteEndemics.csv"))
+      
+      # alternative with andrello et al. stress
+        dat<-df %>%
+          select(mean_COI, mean_16s, site.endemic, cumul_score_COI, Ecoregion) %>%
+          filter(complete.cases(.))  %>%
+          mutate(mean_COI=log(mean_COI),
+                  mean_16s=log(mean_16s))#%>%
+          #mutate_at(c("mean_16s", "mean_COI", "site.endemic", "nceas_score"), ~(scale(.) %>% as.vector))
 
+
+
+        fm1<-glmer.nb(site.endemic~ cumul_score_COI + (1|Ecoregion), data = dat)
+        fm2<-glmer.nb(site.endemic~ mean_16s + (1|Ecoregion), data = dat)
+        fm3<-glmer.nb(site.endemic~ mean_COI + (1|Ecoregion), data = dat)
+        fm4<-glmer.nb(site.endemic~ cumul_score_COI + mean_16s + (1|Ecoregion), data = dat)
+        fm5<-glmer.nb(site.endemic~ cumul_score_COI + mean_COI + (1|Ecoregion), data = dat)
+        fm6<-glmer.nb(site.endemic~ mean_COI + mean_16s + (1|Ecoregion), data = dat)
+        fm7<-glmer.nb(site.endemic~ cumul_score_COI + mean_COI + mean_16s + (1|Ecoregion), data = dat)
+        fm8<-glmer.nb(site.endemic~ (1|Ecoregion), data = dat)
+
+        MuMIn::model.sel(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) 
   #COI only
     dat<-df %>%
       select( mean_COI, site.endemic, nceas_score) %>% 

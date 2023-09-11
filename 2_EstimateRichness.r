@@ -18,7 +18,7 @@
         } else{print(paste0("Warning: ", Gene, " data has changed"))}
 
         RichnessReplicates<-Richnesses %>% 
-            select(ARMS, Observed, RandomSeed) %>%
+            select(ARMS, Observed, cumul_score, RandomSeed) %>%
             pivot_wider(names_from=RandomSeed, values_from=Observed) 
             
         RichnessStats<-RichnessReplicates %>%
@@ -27,7 +27,7 @@
                 mean = mean(c_across(where(is.numeric))),
                 SD = sd(c_across(where(is.numeric))),
                 SE = SD/NumberOfReplicates) %>%
-            select(ARMS, mean, SD, SE)
+            select(ARMS, cumul_score, mean, SD, SE)
 
         return(list(
                 "Stats"=RichnessStats,
@@ -85,7 +85,7 @@
         for (i in 1:length(psList)){
             print(paste0("Getting ARMS endemics for replicate ", i))
             ps<-psList[[i]]
-            df_list[[i]]<-data.frame(row.names=sample_names(ps),ARMS=sample_data(ps)$ARMS, NumberEndemics=NA, Replicate=i)
+            df_list[[i]]<-data.frame(row.names=sample_names(ps),ARMS=sample_data(ps)$ARMS, cumul_score= sample_data(ps)$cumul_score ,NumberEndemics=NA, Replicate=i)
 
 
             for (sample in sample_names(ps)) {
@@ -118,7 +118,7 @@
             ps<-psList[[i]]
                         
             #make dataframe list to populate
-                df_list[[i]]<-data.frame( row.names=sample_names(ps), ARMS=sample_data(ps)$ARMS, Site=sample_data(ps)$Site,  NumberEndemics=NA, Replicate=i)
+                df_list[[i]]<-data.frame( row.names=sample_names(ps), ARMS=sample_data(ps)$ARMS, Site=sample_data(ps)$Site, cumul_score= sample_data(ps)$cumul_score, NumberEndemics=NA, Replicate=i)
 
             #get a list of endemic ESVs for each site (those occuring on more than 1 ARMS in a site but nowhere else)
                 SiteEndemics_list<-list()
@@ -169,7 +169,7 @@
                 mean = mean(c_across(where(is.numeric))),
                 SD = sd(c_across(where(is.numeric))),
                 SE = SD/Replicates) %>%
-            select(ARMS, mean, SD, SE)
+            select(ARMS, cumul_score, mean, SD, SE)
     }
 
 #1) load data

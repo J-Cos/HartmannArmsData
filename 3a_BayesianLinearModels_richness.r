@@ -85,6 +85,18 @@
 
       car::qqPlot(residuals(fm1))
 
+      # alternative with andrello et al. stress
+        dat<-df %>%
+          select(mean_COI, Metabolite_richness, cumul_score_COI, Metabolite_diversity, Ecoregion) %>%
+          filter(complete.cases(.)) #%>%
+          #mutate_at(c("mean_COI", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
+
+        fm1<-lmerTest::lmer(Metabolite_richness~ cumul_score_COI + (1|Ecoregion), data = dat)
+        fm2<-lmerTest::lmer(Metabolite_richness~ mean_COI + (1|Ecoregion), data = dat)
+        fm3<-lmerTest::lmer(Metabolite_richness~ cumul_score_COI + mean_COI + (1|Ecoregion), data = dat)
+        fm4<-lmerTest::lmer(Metabolite_richness~ (1|Ecoregion), data = dat)
+      
+        MuMIn::model.sel(list(fm1, fm2, fm3, fm4), rank="AICc")
 
     #16s only 
       dat<-df %>%
@@ -114,7 +126,19 @@
         write.csv(file.path(OutputSubdirectory,"FrequentistModelSelection_16s.csv"))
       car::qqPlot(residuals(fm1))
 
+      # alternative with andrello et al. stress
+        dat<-df %>%
+          select(mean_16s, Metabolite_richness, Metabolite_diversity, cumul_score_COI, Ecoregion) %>%
+          filter(complete.cases(.)) #%>%
+          #mutate_at(c("mean_16s", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
 
+        fm1<-lmerTest::lmer(Metabolite_richness~ cumul_score_COI + (1|Ecoregion), data = dat)
+        fm2<-lmerTest::lmer(Metabolite_richness~ mean_16s + (1|Ecoregion), data = dat)
+        fm3<-lmerTest::lmer(Metabolite_richness~ cumul_score_COI + mean_16s + (1|Ecoregion), data = dat)
+        fm4<-lmerTest::lmer(Metabolite_richness~ (1|Ecoregion), data = dat)
+
+        MuMIn::model.sel(list(fm1, fm2, fm3, fm4))
+        
 
 
     #both genes
@@ -152,8 +176,26 @@
         MakeModelSelectionTableForPrinting(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) %>%
           write.csv(file.path(OutputSubdirectory, "ModelSelectionTable_MetaboliteRichness.csv"))
 
+      # alternative with andrello et al. stress
+        dat<-df %>%
+          select(mean_COI, mean_16s, Metabolite_richness, Metabolite_diversity, cumul_score_COI, Ecoregion) %>%
+          filter(complete.cases(.))  #%>%
+          #mutate_at(c("mean_16s", "mean_COI", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
+
+          fm1<-lmerTest::lmer(Metabolite_richness~ cumul_score_COI + (1|Ecoregion), data = dat)
+          fm2<-lmerTest::lmer(Metabolite_richness~ mean_16s + (1|Ecoregion), data = dat)
+          fm3<-lmerTest::lmer(Metabolite_richness~ mean_COI + (1|Ecoregion), data = dat)
+          fm4<-lmerTest::lmer(Metabolite_richness~ cumul_score_COI + mean_16s + (1|Ecoregion), data = dat)
+          fm5<-lmerTest::lmer(Metabolite_richness~ cumul_score_COI + mean_COI + (1|Ecoregion), data = dat)
+          fm6<-lmerTest::lmer(Metabolite_richness~ mean_COI + mean_16s + (1|Ecoregion), data = dat)
+          fm7<-lmerTest::lmer(Metabolite_richness~ cumul_score_COI + mean_COI + mean_16s + (1|Ecoregion), data = dat)
+          fm8<-lmerTest::lmer(Metabolite_richness~ (1|Ecoregion), data = dat)
+
+          MuMIn::model.sel(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) 
 
     #fit best model to all data
+
+      MuMIn::model.avg(msCOI, subset=delta<2) %>% summary
  
           mod<-lmerTest::lmer(Metabolite_richness~nceas_score+(1|Ecoregion), df)
           png(file.path(OutputSubdirectory, "FrequentistMixedModel_Best_qqplot.png"), height = 8.3, width = 11.7, units = 'in', res = 300)
@@ -215,6 +257,18 @@
 
       car::qqPlot(residuals(fm1))
 
+      # alternative with andrello et al. stress
+        dat<-df %>%
+          select(mean_COI, Metabolite_diversity, cumul_score_COI, Ecoregion) %>%
+          filter(complete.cases(.)) #%>%
+          #mutate_at(c("mean_COI", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
+
+        fm1<-lmerTest::lmer(Metabolite_diversity~ cumul_score_COI + (1|Ecoregion), data = dat)
+        fm2<-lmerTest::lmer(Metabolite_diversity~ mean_COI + (1|Ecoregion), data = dat)
+        fm3<-lmerTest::lmer(Metabolite_diversity~ cumul_score_COI + mean_COI + (1|Ecoregion), data = dat)
+        fm4<-lmerTest::lmer(Metabolite_diversity~ (1|Ecoregion), data = dat)
+
+        MuMIn::model.sel(list(fm1, fm2, fm3, fm4), rank="AICc")
 
     #16s only 
       dat<-df %>%
@@ -241,7 +295,18 @@
         write.csv(file.path(OutputSubdirectory, "FrequentistModelSelection_Diversity_16s.csv"))
       car::qqPlot(residuals(fm1))
 
+      # alternative with andrello et al. stress
+        dat<-df %>%
+          select(mean_16s, Metabolite_richness, cumul_score_COI, Ecoregion) %>%
+          filter(complete.cases(.)) #%>%
+          #mutate_at(c("mean_16s", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
 
+        fm1<-lmerTest::lmer(Metabolite_richness~ cumul_score_COI + (1|Ecoregion), data = dat)
+        fm2<-lmerTest::lmer(Metabolite_richness~ mean_16s + (1|Ecoregion), data = dat)
+        fm3<-lmerTest::lmer(Metabolite_richness~ cumul_score_COI + mean_16s + (1|Ecoregion), data = dat)
+        fm4<-lmerTest::lmer(Metabolite_richness~ (1|Ecoregion), data = dat)
+
+        MuMIn::model.sel(list(fm1, fm2, fm3, fm4)) 
 
 
     #both genes
@@ -276,6 +341,22 @@
         MakeModelSelectionTableForPrinting(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) %>%
           write.csv(file.path(OutputSubdirectory, "ModelSelectionTable_MetaboliteDiversity.csv"))
 
+      # alternative with andrello et al. stress
+        dat<-df %>%
+          select(mean_COI, mean_16s, Metabolite_diversity, cumul_score_COI, Ecoregion) %>%
+          filter(complete.cases(.))  #%>%
+          #mutate_at(c("mean_16s", "mean_COI", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
+
+          fm1<-lmerTest::lmer(Metabolite_diversity~ cumul_score_COI + (1|Ecoregion), data = dat)
+          fm2<-lmerTest::lmer(Metabolite_diversity~ mean_16s + (1|Ecoregion), data = dat)
+          fm3<-lmerTest::lmer(Metabolite_diversity~ mean_COI + (1|Ecoregion), data = dat)
+          fm4<-lmerTest::lmer(Metabolite_diversity~ cumul_score_COI + mean_16s + (1|Ecoregion), data = dat)
+          fm5<-lmerTest::lmer(Metabolite_diversity~ cumul_score_COI + mean_COI + (1|Ecoregion), data = dat)
+          fm6<-lmerTest::lmer(Metabolite_diversity~ mean_COI + mean_16s + (1|Ecoregion), data = dat)
+          fm7<-lmerTest::lmer(Metabolite_diversity~ cumul_score_COI + mean_COI + mean_16s + (1|Ecoregion), data = dat)
+          fm8<-lmerTest::lmer(Metabolite_diversity~ (1|Ecoregion), data = dat)
+
+          MuMIn::model.sel(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8))
 
     #fit best model to all data
 
