@@ -57,7 +57,7 @@
     #COI only
 
       dat<-df %>%
-        select(mean_COI, Metabolite_richness, nceas_score) %>%
+        select(mean_COI, Metabolite_diversity, Metabolite_richness, nceas_score) %>%
         filter(complete.cases(.))
 
       dat %>% PlotVIF
@@ -66,14 +66,18 @@
 
       # mixed model
       dat<-df %>%
-        select(mean_COI, Metabolite_richness, nceas_score, Ecoregion) %>%
+        select(mean_COI, Metabolite_richness, nceas_score, Metabolite_diversity, Ecoregion) %>%
         filter(complete.cases(.)) #%>%
         #mutate_at(c("mean_COI", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
+      
+      fm<-lmerTest::lmer(Metabolite_richness~ nceas_score + mean_COI + Metabolite_diversity + (1|Ecoregion), data = dat, na.action=na.fail,REML=FALSE)
+      msCOI<-MuMIn::dredge(fm)
 
       fm1<-lmerTest::lmer(Metabolite_richness~ nceas_score + (1|Ecoregion), data = dat)
       fm2<-lmerTest::lmer(Metabolite_richness~ mean_COI + (1|Ecoregion), data = dat)
       fm3<-lmerTest::lmer(Metabolite_richness~ nceas_score + mean_COI + (1|Ecoregion), data = dat)
       fm4<-lmerTest::lmer(Metabolite_richness~ (1|Ecoregion), data = dat)
+
 
       MuMIn::model.sel(list(fm1, fm2, fm3, fm4), rank="AICc") %>% 
         as.data.frame %>%
@@ -84,7 +88,7 @@
 
     #16s only 
       dat<-df %>%
-        select(mean_16s, Metabolite_richness, nceas_score) %>%
+        select(mean_16s, Metabolite_richness, Metabolite_diversity, nceas_score) %>%
         filter(complete.cases(.))
     
       dat %>% PlotVIF
@@ -93,9 +97,12 @@
 
       # mixed model
       dat<-df %>%
-        select(mean_16s, Metabolite_richness, nceas_score, Ecoregion) %>%
+        select(mean_16s, Metabolite_richness, Metabolite_diversity, nceas_score, Ecoregion) %>%
         filter(complete.cases(.)) #%>%
         #mutate_at(c("mean_16s", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
+
+      fm<-lmerTest::lmer(Metabolite_richness~ nceas_score + mean_16s + Metabolite_diversity + (1|Ecoregion), data = dat, na.action=na.fail,REML=FALSE)
+      MuMIn::dredge(fm)
 
       fm1<-lmerTest::lmer(Metabolite_richness~ nceas_score + (1|Ecoregion), data = dat)
       fm2<-lmerTest::lmer(Metabolite_richness~ mean_16s + (1|Ecoregion), data = dat)
@@ -112,7 +119,7 @@
 
     #both genes
       dat<-df %>%
-        select(mean_COI, mean_16s, Metabolite_richness, nceas_score) %>%
+        select(mean_COI, mean_16s, Metabolite_richness, Metabolite_diversity, nceas_score) %>%
         filter(complete.cases(.))
       
       dat %>% PlotVIF
@@ -121,9 +128,12 @@
 
       # mixed model
       dat<-df %>%
-        select(mean_COI, mean_16s, Metabolite_richness, nceas_score, Ecoregion) %>%
+        select(mean_COI, mean_16s, Metabolite_richness, Metabolite_diversity, nceas_score, Ecoregion) %>%
         filter(complete.cases(.))  #%>%
         #mutate_at(c("mean_16s", "mean_COI", "Metabolite_richness", "nceas_score"), ~(scale(.) %>% as.vector))
+
+      fm<-lmerTest::lmer(Metabolite_richness~ nceas_score + mean_16s +mean_COI + Metabolite_diversity + (1|Ecoregion), data = dat, na.action=na.fail,REML=FALSE)
+      MuMIn::dredge(fm)
 
         fm1<-lmerTest::lmer(Metabolite_richness~ nceas_score + (1|Ecoregion), data = dat)
         fm2<-lmerTest::lmer(Metabolite_richness~ mean_16s + (1|Ecoregion), data = dat)
@@ -137,7 +147,7 @@
         MuMIn::model.sel(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) %>% 
         as.data.frame %>%
         write.csv(file.path(OutputSubdirectory, "FrequentistModelSelection_BothGenes.csv"))
-        car::qqPlot(residuals(fm1))
+        car::qqPlot(residuals(fm))
 
         MakeModelSelectionTableForPrinting(list(fm1, fm2, fm3, fm4, fm5, fm6, fm7, fm8)) %>%
           write.csv(file.path(OutputSubdirectory, "ModelSelectionTable_MetaboliteRichness.csv"))
