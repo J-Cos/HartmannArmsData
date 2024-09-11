@@ -18,14 +18,6 @@ applyfilter_ps<-function(ps, minProportion=0.001){
     return(ps_filt)
 }
 
-applyfilter_mat<-function(metab, minProportion=0.001){
-   totalReads<-sum(colSums(metab))
-    metab_filt<-metab[rowSums(metab)>minProportion*totalReads & rowSums(metab>0)>=8,]
-    print(paste0("Filtering out OTUs with abundance less than ",  minProportion*totalReads  ))
-    print(paste0( "Proportion of total reads retained: ", sum(colSums(metab_filt))/totalReads))
-    return(metab_filt)
-}
-
 alignNames<-function(names){
     names %>%
         str_replace("OLO4", "OLO04") %>%
@@ -158,12 +150,14 @@ metab<-read.csv("Data/Hartmann_ARMS_100_cleaned_600_forJames_matchIDs.csv") %>%
 # 2) rarefy data
 ps16<-rarefy_even_depth(ps_l[["16s"]], rngseed=1)
 psc<-rarefy_even_depth(ps_l[["COI"]], rngseed=1)
+psm<-transform_sample_counts(otu_table(metab, taxa_are_rows=TRUE), function(x) ceiling(x/10) ) # reduce to same order of magnitude as metabarcoidng data
+psm<-rarefy_even_depth(psm, rngseed=1)
 
 
 # 3) apply filtering to reduce data to manageable quantity
 ps16_filt<-applyfilter_ps(ps16)
 psc_filt<-applyfilter_ps(psc)
-metab_filt<-applyfilter_mat(metab)
+psm_filt<-applyfilter_ps(psm)
 
 
 # 4) get matrices for spieceasi
@@ -179,7 +173,10 @@ CoiMat<-psc_filt %>%
     unclass
 CoiMat<-CoiMat[order(rownames(CoiMat)),]
 
-metabMat<-metab_filt %>% t
+metabMat<-psm_filt %>%
+    otu_table %>% 
+    t %>%
+    unclass
 metabMat<-metabMat[order(rownames(metabMat)),]
 
 # 5) align matrices - indented lengthy data cleaning section
