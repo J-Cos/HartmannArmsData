@@ -49,9 +49,18 @@ filterByRealm<-function(mat, realm){
     return(newmat)
 }
 
-randomiseMat<-function(mat){
-    rand <- mat[sample(nrow(mat)),]
-    rownames(rand)<-rownames(mat)  
+# randomise matrices either "between" or "within" samples 
+randomiseMat<-function(mat, method, rngseed=1){
+    set.seed(rngseed)
+    if (method=="between") {
+        rand <- mat[sample(nrow(mat)),]
+        rownames(rand)<-rownames(mat)  
+    } else if (method=="within") {
+        rand<-mat
+        for (i in 1:nrow(mat)){
+            rand[i,]<-mat[i,sample(ncol(mat))]
+        }
+    }
     return(rand)
 }
 
@@ -246,9 +255,9 @@ oceanic<-lapply( all, filterByRealm, 2)
 
 
 # 7) create random matrices
-all_rand<-lapply( all, randomiseMat)
-coastal_rand<-lapply( coastal, randomiseMat)
-oceanic_rand<-lapply( oceanic, randomiseMat)
+all_rand<-lapply( all, randomiseMat, method="within")
+coastal_rand<-lapply( coastal, randomiseMat, method="within")
+oceanic_rand<-lapply( oceanic, randomiseMat, method="within")
 
 # 8) run spiec easi
 
