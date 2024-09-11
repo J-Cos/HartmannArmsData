@@ -1,14 +1,12 @@
 #######################
-# cooccurance models & nulls
+# create matrices for spiec-easi input
 ###########################
 
 # packages and functions
     library(phyloseq)
     library(tidyverse)
-    library(gridExtra)
-    library(SpiecEasi)
 
-applyfilter_ps<-function(ps, minProportion=0.001){
+applyfilter_ps<-function(ps, minProportion=0.0001){
    totalReads<-sum(sample_sums(ps))
     ps_filt<-ps %>%
             filter_taxa(., function(x) sum(x) > minProportion*totalReads, TRUE) %>%
@@ -39,107 +37,6 @@ filterByRealm<-function(mat, realm){
     newmat<-newmat[,colSums(newmat)!=0]
     print(paste0(dim(newmat)[2], " OTUs remaining in realm ", realm, " ; ", dim(mat)[2]-dim(newmat)[2], " removed"))
     return(newmat)
-}
-
-# randomise matrices either "between" or "within" samples 
-randomiseMat<-function(mat, method, rngseed=1){
-    set.seed(rngseed)
-    if (method=="between") {
-        rand <- mat[sample(nrow(mat)),]
-        rownames(rand)<-rownames(mat)  
-    } else if (method=="within") {
-        rand<-mat
-        for (i in 1:nrow(mat)){
-            rand[i,]<-mat[i,sample(ncol(mat))]
-        }
-    }
-    return(rand)
-}
-
-fitSE<-function(mat_list){
-    se<-spiec.easi(
-        mat_list, 
-        method='mb', 
-        sel.criterion = "bstars",
-        verbose=TRUE,
-        lambda.min.ratio=5e-04, 
-        nlambda=100, 
-        pulsar.select=TRUE, 
-        pulsar.params = list(rep.num=10, thresh=0.05, ncores=4)
-        )
-    print(paste0("Stability: ", getStability(se)))
-    return(se)
-}
-
-getMultiNetworkDataframe<-function(se){
-        
-    #### MB method ####
-    # Symmetrize the MB assymetric graph by taking the maximum value of the edge pairs e_ij / e_ji
-    sebeta <- symBeta(getOptBeta(se), mode='maxabs')
-    elist <- Matrix::summary(sebeta)
-
-    # Calculate the number of columns - i.e. number of OTUs/metabolites 
-    n_bac <- ncol(EsvMat)
-    n_euk <- ncol(CoiMat)
-    n_met <- ncol(metabMat)
-
-    # Create a new column that encodes the types of association between two nodes 
-    # Nodes are numbered in order from bac to euk to mets 
-
-    elist <- elist %>%
-    mutate(interaction.type = case_when(
-        i %in% 1:n_bac & 
-        j %in% 1:n_bac ~ "Bacteria-Bacteria",
-
-        i %in% (n_bac+1):(n_bac+n_euk) & 
-        j %in% (n_bac+1):(n_bac+n_euk) ~ "Eukaryote-Eukaryote",
-        
-        i %in% (n_bac+n_euk+1):(n_bac+n_euk+n_met) & 
-        j %in% (n_bac+n_euk+1):(n_bac+n_euk+n_met) ~ "Metabolite-Metabolite",
-
-        i %in% 1:n_bac & 
-        j %in% (n_bac+1):(n_bac+n_euk) ~ "Bacteria-Eukaryote",
-        j %in% 1:n_bac & 
-        i %in% (n_bac+1):(n_bac+n_euk) ~ "Bacteria-Eukaryote",
-
-        i %in% 1:n_bac & 
-        j %in% (n_bac+n_euk+1):(n_bac+n_euk+n_met) ~ "Bacteria-Metabolite",
-        j %in% 1:n_bac & 
-        i %in% (n_bac+n_euk+1):(n_bac+n_euk+n_met) ~ "Bacteria-Metabolite",
-
-        i %in% (n_bac+1):(n_bac+n_euk) & 
-        j %in% (n_bac+n_euk+1):(n_bac+n_euk+n_met) ~ "Eukaryote-Metabolite",
-        j %in% (n_bac+1):(n_bac+n_euk) & 
-        i %in% (n_bac+n_euk+1):(n_bac+n_euk+n_met) ~ "Eukaryote-Metabolite",
-
-        ))
-    return(elist)
-}
-
-getEdgeDf<-function(se.test, se.rand){
-    df1<-cbind(getMultiNetworkDataframe(se.test), group="Observed")
-    df2<-cbind(getMultiNetworkDataframe(se.rand), group="Null")
-    df<-rbind(df1, df2)
-    df<-as.data.frame(df)
-    df<-as_tibble(df) %>%
-        mutate(value=as.numeric(x))
-    return(df)
-}
-
-makeNetworkFigure<-function(edge_df){
-    edge_df %>% 
-    ggplot(data=., aes(x=value))+
-        geom_histogram( aes(fill=group),alpha=0.5, position="identity",  binwidth=0.05)+
-                scale_fill_manual(values=c("black", "blue"))+
-
-        facet_wrap(~interaction.type)+
-        geom_vline(xintercept=0)+
-        theme_classic()+
-        scale_x_continuous(limits=c(-0.5, 1), expand = c(0, 0)) +
-        scale_y_continuous(expand = c(0, 0)) +
-        xlab ("Edge Weights")+ ylab("Frequency")+
-        theme(legend.title=element_blank(), strip.background=element_blank(), 
-            strip.text = element_text(size = 12))
 }
 
 # 1) load data
@@ -246,41 +143,9 @@ metabMat<-metabMat[order(rownames(metabMat)),]
 realmEncoding<-data.frame(ARMS=common_column_names, realm=c(rep(1, 23), rep(2, 15), rep(1, 8), rep(2, 3)))
 
 all<-list(EsvMat, CoiMat, metabMat)
-
 coastal<-lapply( all, filterByRealm, 1)
 oceanic<-lapply( all, filterByRealm, 2)
 
 
-# 7) create random matrices
-all_rand<-lapply( all, randomiseMat, method="within")
-coastal_rand<-lapply( coastal, randomiseMat, method="within")
-oceanic_rand<-lapply( oceanic, randomiseMat, method="within")
-
-# 8) run spiec easi
-
-getMaxReps<- function(N, maxRAM=12) {(maxRAM * 1e+9) / (N^2*8) }
-getMaxReps(N=dim(EsvMat)[2]+dim(CoiMat)[2]+dim(metabMat)[2])
-
-se_all<-fitSE(all)
-se_all_rand<-fitSE(all_rand)
-se_coastal<-fitSE(coastal)
-se_coastal_rand<-fitSE(coastal_rand)
-se_oceanic<-fitSE(oceanic)
-se_oceanic_rand<-fitSE(oceanic_rand)
-
-
-
-# 9) export plotting dataframe 
-edge_all_df<-getEdgeDf(se_all, se_all_rand)
-edge__coastal_df<-getEdgeDf(se_coastal, se_coastal_rand)
-edge_oceanic_df<-getEdgeDf(se_oceanic, se_oceanic_rand)
-
-
-
-# make plots - move to next script
-p_all<-makeNetworkFigure(edge_all_df)
-ggsave("Figures/Figure_all.pdf", p_all,  width = 12, height = 8)
-p_coastal<-makeNetworkFigure(edge__coastal_df)
-ggsave("Figures/Figure_coastal.pdf", p_coastal,  width = 12, height = 8)
-p_oceanic<-makeNetworkFigure(edge_all_df)
-ggsave("Figures/Figure_oceanic.pdf", p_oceanic,  width = 12, height = 8)
+# 7) save networking matrices - ready to input into spiec-easi
+saveRDS( list("all"=all, "coastal"=coastal, "oceanic"=oceanic), "Outputs/NetworkMatrices.RDS")
