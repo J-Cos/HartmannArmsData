@@ -82,6 +82,35 @@ makeNetworkFigure<-function(edge_df){
                 strip.text = element_text(size = 12))
 }
 
+
+makeDiffFigure<-function(edge_df){
+
+    p<-makeNetworkFigure(edge_df)
+
+    g1<-ggplot_build(p)$data[[1]] %>% 
+        as_tibble() %>%
+        filter(group==1)
+
+    g2<-ggplot_build(p)$data[[1]] %>% 
+        as_tibble() %>%
+        filter(group==2) %>%
+        select(PANEL, xmin, xmax, count) %>%
+        rename(count2=count)
+
+    newPlot_df<-left_join(g1, g2, by=c("PANEL", "xmin", "xmax")) %>%
+        mutate(diff=count2-count) %>%
+        rename(interaction=PANEL)
+
+    newPlot_df %>%
+        mutate(positive=xmin>0) %>%
+        ggplot(data=., aes(xmin=xmin,xmax=xmax,ymax=diff,ymin=0, color=positive)) + 
+            geom_rect()+
+            facet_wrap(~interaction, scales = "free_y")+
+            geom_vline(xintercept=0, linetype=2)+
+            theme_classic()
+}
+
+
 #load data
 matrix_list<-readRDS( "Outputs/NetworkMatrices.RDS")
 
@@ -97,6 +126,10 @@ edge_all_df<-getEdgeDf(se_all, se_all_rand, matrices=matrix_list[["all"]])
 p_all<-makeNetworkFigure(edge_all_df)
 ggsave("Figures/Figure_all.pdf", p_all,  width = 12, height = 8)
 
+p_all_diff<-makeDiffFigure(edge_all_df)
+ggsave("Figures/Figure_all_diff.pdf", p_all_diff,  width = 12, height = 8)
+
+
 
 #coastal
 se_coastal<-readRDS("Outputs/se_coastal.RDS")
@@ -106,6 +139,10 @@ getStability(se_coastal_rand)
 edge_coastal_df<-getEdgeDf(se_coastal, se_coastal_rand, matrices=matrix_list[["coastal"]])
 p_coastal<-makeNetworkFigure(edge_coastal_df)
 ggsave("Figures/Figure_coastal.pdf", p_coastal,  width = 12, height = 8)
+
+p_coastal_diff<-makeDiffFigure(edge_coastal_df)
+ggsave("Figures/Figure_coastal_diff.pdf", p_coastal_diff,  width = 12, height = 8)
+
 
 #oceanic
 edge_oceanic_df<-getEdgeDf(se_oceanic, se_oceanic_rand, matrices=matrix_list[["oceanic"]])
