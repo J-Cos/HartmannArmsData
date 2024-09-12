@@ -75,22 +75,22 @@ makeNetworkFigure<-function(edge_df){
             geom_vline(aes(xintercept = mean, color=group))+
             #geom_vline(xintercept=0, color="red", linetype = 'dotted')+
             theme_classic()+
-            #scale_x_continuous(limits=c(-0.5, 1), expand = c(0, 0)) +
-            #scale_y_continuous(expand = c(0, 0)) +
+            scale_x_continuous(expand = c(0, 0)) +
+            scale_y_continuous(expand = c(0, 0)) +
             xlab ("Edge Weights")+ ylab("Frequency")+
             theme(legend.title=element_blank(), strip.background=element_blank(), 
                 strip.text = element_text(size = 12))
 }
 
 #load data
-se_all<-readRDS("Outputs/se_all.RDS")
-se_all_rand<-readRDS("Outputs/se_all_rand.RDS")
 matrix_list<-readRDS( "Outputs/NetworkMatrices.RDS")
 
 
 # make plots
 
 #all
+se_all<-readRDS("Outputs/se_all.RDS")
+se_all_rand<-readRDS("Outputs/se_all_rand.RDS")
 getStability(se_all)
 getStability(se_all_rand)
 edge_all_df<-getEdgeDf(se_all, se_all_rand, matrices=matrix_list[["all"]])
@@ -99,11 +99,15 @@ ggsave("Figures/Figure_all.pdf", p_all,  width = 12, height = 8)
 
 
 #coastal
-edge__coastal_df<-getEdgeDf(se_coastal, se_coastal_rand, matrices=matrix_list[["coastal"]])
-p_coastal<-makeNetworkFigure(edge__coastal_df)
+se_coastal<-readRDS("Outputs/se_coastal.RDS")
+se_coastal_rand<-readRDS("Outputs/se_coastal_rand.RDS")
+getStability(se_coastal)
+getStability(se_coastal_rand)
+edge_coastal_df<-getEdgeDf(se_coastal, se_coastal_rand, matrices=matrix_list[["coastal"]])
+p_coastal<-makeNetworkFigure(edge_coastal_df)
 ggsave("Figures/Figure_coastal.pdf", p_coastal,  width = 12, height = 8)
 
 #oceanic
 edge_oceanic_df<-getEdgeDf(se_oceanic, se_oceanic_rand, matrices=matrix_list[["oceanic"]])
-p_oceanic<-makeNetworkFigure(edge_all_df)
+p_oceanic<-makeNetworkFigure(edge_oceanic_df)
 ggsave("Figures/Figure_oceanic.pdf", p_oceanic,  width = 12, height = 8)
