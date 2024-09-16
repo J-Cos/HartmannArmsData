@@ -178,6 +178,16 @@ ggsave("Figures/Figure_coastal_diff_absolute.pdf", p_coastal_diff,  width = 12, 
 
 
 #oceanic
+se_oceanic<-readRDS("Outputs/se_oceanic.RDS")
+se_oceanic_rand<-readRDS("Outputs/se_oceanic_rand.RDS")
+getStability(se_oceanic)
+getStability(se_oceanic_rand)
 edge_oceanic_df<-getEdgeDf(se_oceanic, se_oceanic_rand, matrices=matrix_list[["oceanic"]])
 p_oceanic<-makeNetworkFigure(edge_oceanic_df)
 ggsave("Figures/Figure_oceanic.pdf", p_oceanic,  width = 12, height = 8)
+
+p_oceanic_diff<-makeDiffFigure(edge_oceanic_df, asProportion=TRUE)
+ggsave("Figures/Figure_oceanic_diff_proportions.pdf", p_oceanic_diff,  width = 12, height = 8)
+
+p_oceanic_diff<-makeDiffFigure(edge_oceanic_df, asProportion=FALSE)
+ggsave("Figures/Figure_oceanic_diff_absolute.pdf", p_oceanic_diff,  width = 12, height = 8)
