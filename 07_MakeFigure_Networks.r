@@ -1,3 +1,8 @@
+# desired clustering at which to generate networks
+# either ASV (set to "") or cOTU (set to "_cOTU")
+cluster<-c("")
+#cluster<-c("_cOTUs")
+
 # packages and functions
     library(tidyverse)
     library(gridExtra)
@@ -140,26 +145,31 @@ makeDiffFigure<-function(edge_df, asProportion=TRUE){
 
 
 #load data
-matrix_list<-readRDS( "Outputs/NetworkMatrices.RDS")
+matrix_list<-readRDS( paste0("Outputs/NetworkMatrices",cluster,".RDS"))
 
 
 # make plots
 
 #all
-se_all<-readRDS("Outputs/se_all.RDS")
-se_all_rand<-readRDS("Outputs/se_all_rand.RDS")
+se_all<-readRDS(paste0("Outputs/se_all", cluster, ".RDS"))
+se_all_rand<-readRDS(paste0("Outputs/se_all_rand", cluster, ".RDS"))
 getStability(se_all)
 getStability(se_all_rand)
 edge_all_df<-getEdgeDf(se_all, se_all_rand, matrices=matrix_list[["all"]])
 p_all<-makeNetworkFigure(edge_all_df)
-ggsave("Figures/Figure_all.pdf", p_all,  width = 12, height = 8)
+ggsave(paste0("Figures/Figure_all",cluster,".pdf"), p_all,  width = 12, height = 8)
 
 p_all_diff<-makeDiffFigure(edge_all_df, asProportion=TRUE)
-ggsave("Figures/Figure_all_diff_proportions.pdf", p_all_diff,  width = 12, height = 8)
+ggsave(paste0("Figures/Figure_all_diff_proportions", cluster, ".pdf"), p_all_diff,  width = 12, height = 8)
 
 p_all_diff<-makeDiffFigure(edge_all_df, asProportion=FALSE)
-ggsave("Figures/Figure_all_diff_absolute.pdf", p_all_diff,  width = 12, height = 8)
+ggsave(paste0("Figures/Figure_all_diff_absolute", cluster, ".pdf"), p_all_diff,  width = 12, height = 8)
 
+
+
+################################################################
+# unused coastal and oceanic split (not enough data to fit)
+# multiple cluster options therefore are not implemented
 
 #coastal
 se_coastal<-readRDS("Outputs/se_coastal.RDS")

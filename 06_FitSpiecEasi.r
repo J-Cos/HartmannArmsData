@@ -2,6 +2,11 @@
 # create null random matrices and fit spiec easi
 ###########################
 
+# desired clustering at which to generate networks
+# either ASV (set to "") or cOTU (set to "_cOTU")
+cluster<-c("")
+#cluster<-c("_cOTUs")
+
 # packages and functions
     library(tidyverse)
     library(SpiecEasi)
@@ -45,7 +50,7 @@ fitSE<-function(mat_list, lmr=5e-04){
 }
 
 # 1) load networking matrices - ready to input into spiec-easi
-Matrices<-readRDS("Outputs/NetworkMatrices.RDS")
+Matrices<-readRDS(paste0("Outputs/NetworkMatrices", cluster, ".RDS"))
 
 all<-Matrices[["all"]]
 coastal<-Matrices[["coastal"]]
@@ -67,11 +72,16 @@ n
 getMaxReps(n)
 
 se_all<-fitSE(all)
-saveRDS( se_all, "Outputs/se_all.RDS")
+saveRDS( se_all, paste0("Outputs/se_all", cluster, ".RDS"))
 
 se_all_rand<-fitSE(all_rand)
-saveRDS( se_all_rand, "Outputs/se_all_rand.RDS")
+saveRDS( se_all_rand, paste0("Outputs/se_all_rand", cluster, ".RDS"))
 
+
+
+################################################################
+# unused coastal and oceanic split (not enough data to fit)
+# multiple cluster options therefore are not implemented
 se_coastal<-fitSE(coastal)
 saveRDS( se_coastal, "Outputs/se_coastal.RDS")
 

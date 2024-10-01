@@ -41,8 +41,12 @@
         HartmannARMS<-read.csv(file.path("Data", "HartmannARMS.csv")) %>% select("Matching.ARMS") %>% unlist %>% as.vector
 
 #2) extract those arms only from COI and 16s datasets
+    #ASVs
         ps16Aaron<-PrunePhyloseqToAaronsData(phyloseqRDS=file.path("/home/j/Dropbox/CrossPacific_Paper", "Outputs", "ps16.RDS"))
         psCoiAaron<-PrunePhyloseqToAaronsData(phyloseqRDS=file.path("/home/j/Dropbox/CrossPacific_Paper", "Outputs", "psCOI.RDS"))
+    #cOTUs
+        ps16Aaron_cOTUs<-PrunePhyloseqToAaronsData(phyloseqRDS=file.path("/home/j/Dropbox/CrossPacific_Paper", "Outputs", "ps16_cOTUs.RDS"))
+        psCoiAaron_cOTUs<-PrunePhyloseqToAaronsData(phyloseqRDS=file.path("/home/j/Dropbox/CrossPacific_Paper", "Outputs", "psCOI_cOTUs.RDS"))
 
 #3) Prune to matched ARMS only - Aaron's analysis can use all samples so don't do this
         #ps16Aaron<-PruneToMatchingArms(psToPrune=ps16Aaron, psToMatch=psCoiAaron)
@@ -50,3 +54,4 @@
 
 #4) save output
         saveRDS(list("16s"=ps16Aaron, "COI"=psCoiAaron), file.path("Outputs", "AaronsARMS.RDS"))
+        saveRDS(list("16s"=ps16Aaron_cOTUs, "COI"=psCoiAaron_cOTUs), file.path("Outputs", "AaronsARMS_cOTUs.RDS"))

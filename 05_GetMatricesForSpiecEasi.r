@@ -2,6 +2,12 @@
 # create matrices for spiec-easi input
 ###########################
 
+# desired clustering at which to generate networks
+# either ASV (set to "") or cOTU (set to "_cOTU")
+cluster<-c("")
+#cluster<-c("_cOTUs")
+
+
 # packages and functions
     library(phyloseq)
     library(tidyverse)
@@ -40,7 +46,8 @@ filterByRealm<-function(mat, realm){
 }
 
 # 1) load data
-ps_l<-readRDS(file.path("Outputs", "AaronsARMS.RDS"))
+ps_l<-readRDS(file.path("Outputs", paste0("AaronsARMS", cluster, ".RDS")))
+
 metab<-read.csv("Data/Hartmann_ARMS_100_cleaned_600_forJames_matchIDs.csv") %>%
     select(-Metabs)
 
@@ -148,4 +155,4 @@ oceanic<-lapply( all, filterByRealm, 2)
 
 
 # 7) save networking matrices - ready to input into spiec-easi
-saveRDS( list("all"=all, "coastal"=coastal, "oceanic"=oceanic), "Outputs/NetworkMatrices.RDS")
+saveRDS( list("all"=all, "coastal"=coastal, "oceanic"=oceanic), paste0("Outputs/NetworkMatrices", cluster, ".RDS"))
